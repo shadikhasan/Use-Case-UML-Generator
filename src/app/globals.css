@@ -23,3 +23,51 @@ body {
   background: hsl(var(--background));
   color: hsl(var(--foreground));
 }
+
+@keyframes diagram-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes line-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes node-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+}
+
+.animate-diagram-fade {
+  animation: diagram-fade 700ms ease-out both;
+}
+
+.animate-line-draw {
+  animation: line-draw 850ms ease-out both;
+}
+
+.animate-node-float {
+  animation: node-float 3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.delay-1 {
+  animation-delay: 180ms;
+}
+
+.delay-2 {
+  animation-delay: 340ms;
+}
