@@ -764,7 +764,7 @@ const UseCaseUMLBuilder = () => {
                       return { ...state, relationships: next };
                     });
                   }}
-                  className={`${inputCls} md:col-span-2`}
+                  className={`${inputCls} min-w-[140px] md:col-span-3`}
                 >
                   <option value="association">association</option>
                   <option value="include">include</option>
@@ -801,7 +801,7 @@ const UseCaseUMLBuilder = () => {
                     });
                   }}
                   placeholder="Optional note"
-                  className={`${inputCls} sm:col-span-2 md:col-span-3`}
+                  className={`${inputCls} sm:col-span-2 md:col-span-2`}
                 />
                 <button
                   type="button"
@@ -853,7 +853,28 @@ const UseCaseUMLBuilder = () => {
                 type="button"
                 className={btnCls}
                 onClick={() => {
-                  setImportText(exportJsonText);
+                  applyChange(() => initialState);
+                  setImportText(
+                    JSON.stringify(
+                      {
+                        systemName: initialState.systemName,
+                        actors: initialState.actors.map((a) => ({ label: a.label, side: a.side })),
+                        useCases: initialState.useCases.map((u) => ({ label: u.label, module: u.module })),
+                        relationships: initialState.relationships.map((r) => ({
+                          from: initialState.actors.find((a) => a.id === r.from)?.label ??
+                            initialState.useCases.find((u) => u.id === r.from)?.label ??
+                            r.from,
+                          to: initialState.actors.find((a) => a.id === r.to)?.label ??
+                            initialState.useCases.find((u) => u.id === r.to)?.label ??
+                            r.to,
+                          type: r.type,
+                          label: r.label,
+                        })),
+                      },
+                      null,
+                      2,
+                    ),
+                  );
                   setImportError("");
                 }}
               >
