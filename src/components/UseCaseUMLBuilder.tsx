@@ -100,6 +100,7 @@ const UseCaseUMLBuilder = () => {
   const [editingRelationshipTo, setEditingRelationshipTo] = useState("");
   const [editingRelationshipType, setEditingRelationshipType] = useState<RelationshipType>("association");
   const [editingRelationshipLabel, setEditingRelationshipLabel] = useState("");
+  const [exportBaseName, setExportBaseName] = useState("use-case-diagram");
   const diagramWrapRef = useRef<HTMLDivElement | null>(null);
 
   const applyChange = (updater: (current: DiagramState) => DiagramState) => {
@@ -415,15 +416,29 @@ const UseCaseUMLBuilder = () => {
     URL.revokeObjectURL(url);
   };
 
+  const getDownloadFilename = (extension: string) => {
+    const defaultBase = slugify(present.systemName || "use-case-diagram");
+    const normalized = exportBaseName
+      .trim()
+      .replace(/[<>:\"/\\|?*\u0000-\u001F]/g, "-")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    const base = normalized || defaultBase;
+    return `${base}.${extension}`;
+  };
+
   const handleExportJSON = () => {
-    downloadFile(exportJsonText, "use-case-diagram.json", "application/json");
+    const filename = getDownloadFilename("json");
+    downloadFile(exportJsonText, filename, "application/json");
   };
 
   const handleExportSVG = () => {
+    const filename = getDownloadFilename("svg");
     const svg = diagramWrapRef.current?.querySelector("svg");
     if (!svg) return;
     const serialized = new XMLSerializer().serializeToString(svg);
-    downloadFile(serialized, "use-case-diagram.svg", "image/svg+xml;charset=utf-8");
+    downloadFile(serialized, filename, "image/svg+xml;charset=utf-8");
   };
 
   const renderExportPng = async (targetScale = 2) => {
@@ -478,15 +493,17 @@ const UseCaseUMLBuilder = () => {
   };
 
   const handleExportPNG = async () => {
+    const filename = getDownloadFilename("png");
     const dataUrl = await renderExportPng(2);
     if (!dataUrl) return;
     const a = document.createElement("a");
     a.href = dataUrl;
-    a.download = "use-case-diagram.png";
+    a.download = filename;
     a.click();
   };
 
   const handleExportPDF = async () => {
+    const filename = getDownloadFilename("pdf");
     const dataUrl = await renderExportPng(2);
     if (!dataUrl) return;
 
@@ -512,7 +529,7 @@ const UseCaseUMLBuilder = () => {
     const offsetY = (pageHeight - renderHeight) / 2;
 
     pdf.addImage(dataUrl, "PNG", offsetX, offsetY, renderWidth, renderHeight);
-    pdf.save("use-case-diagram.pdf");
+    pdf.save(filename);
   };
 
   useEffect(() => {
@@ -901,6 +918,14 @@ const UseCaseUMLBuilder = () => {
             <p className="text-xs text-muted-foreground">Updates in real time from form or JSON editor</p>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            <input
+              type="text"
+              value={exportBaseName}
+              onChange={(e) => setExportBaseName(e.target.value)}
+              placeholder="File name"
+              className={`${inputCls} col-span-2 sm:w-56`}
+              aria-label="Export file name"
+            />
             <button type="button" className={btnCls} onClick={handleExportPNG}>
               Export PNG
             </button>
