@@ -11,8 +11,25 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-sky-50 to-amber-50 px-6 py-12 md:px-10">
-      <section className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-sm md:p-10">
+    <main className="min-h-screen bg-gradient-to-b from-cyan-50 via-sky-50 to-amber-50">
+      <header className="sticky top-0 z-40 border-b border-white/45 bg-white/70 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 md:px-10">
+          <Link href="/" className="text-sm font-semibold tracking-wide text-sky-900">
+            UML UseCase Studio
+          </Link>
+          <nav className="flex items-center gap-5 text-sm text-muted-foreground">
+            <Link href="/" className="hover:text-foreground">
+              Home
+            </Link>
+            <Link href="/builder" className="hover:text-foreground">
+              Builder
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-3xl px-6 py-12 md:px-10">
+        <div className="rounded-3xl border border-slate-200 bg-white/90 p-8 shadow-sm md:p-10">
         <p className="text-xs font-semibold uppercase tracking-wide text-sky-700">UML UseCase Studio</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Contact</h1>
         <p className="mt-3 text-sm text-muted-foreground md:text-base">
@@ -34,13 +51,7 @@ export default function ContactPage() {
             </a>
           </article>
         </div>
-
-        <Link
-          href="/"
-          className="mt-8 inline-flex rounded-lg border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-800 transition hover:bg-sky-100"
-        >
-          Back to home
-        </Link>
+        </div>
       </section>
     </main>
   );
