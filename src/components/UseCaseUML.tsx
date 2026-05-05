@@ -322,8 +322,8 @@ const UseCaseUML = ({
   }, [actors, relationships, groups, useCases, width, actorHeight, actorWidth, useCaseHeight, useCaseWidth, onRelationshipEdit]);
 
   return (
-    <div className="w-full overflow-x-auto rounded-md border border-border bg-card p-3 text-foreground">
-      <div className="flex justify-center">
+    <div className="w-full overflow-x-auto overflow-y-hidden rounded-md border border-border bg-card p-3 text-foreground [-webkit-overflow-scrolling:touch] touch-pan-x">
+      <div className="min-w-max sm:flex sm:justify-center">
       <svg className="shrink-0" width={svgWidth} height={height} role="img" aria-label={`${systemName} use case diagram`}>
         <defs>
           <marker id="arrow-filled" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
