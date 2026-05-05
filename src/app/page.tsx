@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import SiteNavbar from "@/components/SiteNavbar";
 
 export const metadata: Metadata = {
   title: "Online Use Case Diagram Builder",
@@ -83,32 +84,9 @@ export default function HomePage() {
         <div className="absolute left-1/3 top-1/2 h-64 w-64 rounded-full bg-emerald-200/45 blur-3xl" />
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-white/45 bg-white/70 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3 md:px-10">
-          <a href="#" className="text-sm font-semibold tracking-wide text-sky-900">
-            Use Case UML Generator
-          </a>
-          <nav className="hidden items-center gap-5 text-sm text-muted-foreground md:flex">
-            <a href="#how" className="hover:text-foreground">
-              How it works
-            </a>
-            <a href="#features" className="hover:text-foreground">
-              Features
-            </a>
-            <Link href="/contact" className="hover:text-foreground">
-              Contact
-            </Link>
-          </nav>
-          <Link
-            href="/builder"
-            className="rounded-lg bg-gradient-to-r from-sky-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-105"
-          >
-            Try it now
-          </Link>
-        </div>
-      </header>
+      <SiteNavbar currentPath="/" />
 
-      <section className="mx-auto max-w-6xl px-6 pb-10 pt-10 md:px-10 md:pt-16">
+      <section className="mx-auto max-w-8xl px-6 pb-10 pt-10 md:px-10 md:pt-16">
         <div className="space-y-6">
           <div className="rounded-3xl border border-sky-200/80 bg-white/80 p-8 shadow-sm backdrop-blur md:p-10">
             <p className="inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold tracking-wide text-sky-700">
@@ -181,7 +159,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="how" className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-12">
+      <section id="how" className="mx-auto max-w-8xl px-6 py-8 md:px-10 md:py-12">
         <div className="rounded-3xl border border-emerald-200 bg-white/90 p-8 md:p-10">
           <h2 className="text-2xl font-bold tracking-tight md:text-3xl">How It Actually Works</h2>
           <p className="mt-2 text-sm text-muted-foreground md:text-base">
@@ -201,7 +179,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-4 md:px-10">
+      <section className="mx-auto max-w-8xl px-6 py-4 md:px-10">
         <div className="rounded-3xl border border-fuchsia-200 bg-gradient-to-r from-fuchsia-50 to-violet-50 p-8 md:p-10">
           <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Discover Better Diagram Structures</h2>
           <p className="mt-3 max-w-3xl text-sm text-muted-foreground md:text-base">
@@ -217,7 +195,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="features" className="mx-auto max-w-6xl px-6 py-8 md:px-10 md:py-12">
+      <section id="features" className="mx-auto max-w-8xl px-6 py-8 md:px-10 md:py-12">
         <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Powerful Features for Professional UML Work</h2>
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {features.map((item, index) => (
@@ -240,7 +218,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-20 pt-2 md:px-10">
+      <section className="mx-auto max-w-8xl px-6 pb-20 pt-2 md:px-10">
         <div className="rounded-3xl border border-sky-200 bg-gradient-to-r from-sky-100 to-indigo-100 p-8 text-center md:p-12">
           <p className="text-sm font-medium text-muted-foreground">Ready to model your next system?</p>
           <h2 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl">Start Creating Your Use Case Diagram</h2>

@@ -512,14 +512,14 @@ const UseCaseUMLBuilder = () => {
   }, []);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-cyan-50 via-sky-50 to-amber-50 px-3 py-6 sm:px-4 sm:py-8 md:px-8 md:py-10">
+    <div className="relative overflow-hidden py-6 sm:py-8 md:py-10">
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-[-10rem] top-[-9rem] h-80 w-80 rounded-full bg-cyan-300/65 blur-3xl" />
         <div className="absolute right-[-12rem] top-16 h-96 w-96 rounded-full bg-fuchsia-300/40 blur-3xl" />
         <div className="absolute bottom-[-8rem] left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-amber-300/55 blur-3xl" />
       </div>
 
-      <div className="mx-auto max-w-6xl space-y-4 sm:space-y-5">
+      <div className="space-y-4 sm:space-y-5">
         <header className="rounded-3xl border border-sky-200/80 bg-white/85 p-4 shadow-sm backdrop-blur sm:p-6 md:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
@@ -1006,7 +1006,7 @@ const UseCaseUMLBuilder = () => {
           </div>
         </div>
       ) : null}
-    </main>
+    </div>
   );
 };
 
