@@ -1,4 +1,14 @@
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Online Use Case Diagram Builder",
+  description:
+    "Generate, refine, and export use case UML diagrams with a guided workflow, live preview, and consistent modeling structure.",
+  alternates: {
+    canonical: "/",
+  },
+};
 
 const steps = [
   {
@@ -35,8 +45,23 @@ const features = [
 ];
 
 export default function HomePage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "Use Case UML Generator",
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web",
+    description:
+      "Create and refine use case UML diagrams online with live preview and exports to PNG, SVG, PDF, and JSON.",
+    url: "/",
+  };
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-cyan-50 via-sky-50 to-amber-50 text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute left-[-10rem] top-[-9rem] h-80 w-80 rounded-full bg-cyan-300/65 blur-3xl" />
         <div className="absolute right-[-12rem] top-16 h-96 w-96 rounded-full bg-fuchsia-300/40 blur-3xl" />
