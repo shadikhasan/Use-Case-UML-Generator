@@ -18,6 +18,9 @@ export const metadata: Metadata = {
     "system modeling",
     "UML builder",
   ],
+  authors: [{ name: "Shadik" }],
+  creator: "Shadik",
+  publisher: "UML UseCase Studio",
   alternates: {
     canonical: "/",
   },

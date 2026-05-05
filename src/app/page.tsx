@@ -54,6 +54,20 @@ export default function HomePage() {
     description:
       "Create and refine use case UML diagrams online with live preview and exports to PNG, SVG, PDF, and JSON.",
     url: "/",
+    creator: {
+      "@type": "Person",
+      name: "Shadik",
+      sameAs: "https://github.com/shadikhasan",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "UML UseCase Studio",
+    },
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: "hello@umlusecasestudio.com",
+    },
   };
 
   return (
@@ -81,6 +95,9 @@ export default function HomePage() {
             <a href="#features" className="hover:text-foreground">
               Features
             </a>
+            <Link href="/contact" className="hover:text-foreground">
+              Contact
+            </Link>
           </nav>
           <Link
             href="/builder"
