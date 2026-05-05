@@ -45,6 +45,17 @@ const slugify = (text: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || `id-${Date.now()}`;
 
+const getUniqueId = (baseId: string, usedIds: Set<string>) => {
+  if (!usedIds.has(baseId)) return baseId;
+  let counter = 2;
+  let candidate = `${baseId}-${counter}`;
+  while (usedIds.has(candidate)) {
+    counter += 1;
+    candidate = `${baseId}-${counter}`;
+  }
+  return candidate;
+};
+
 const initialActors: EditableActor[] = [
   { id: "customer", label: "Customer", side: "left" },
   { id: "admin", label: "Admin", side: "right" },
@@ -81,6 +92,15 @@ const UseCaseUMLBuilder = () => {
   const [future, setFuture] = useState<DiagramState[]>([]);
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState("");
+  const [editingUseCaseId, setEditingUseCaseId] = useState<string | null>(null);
+  const [editingUseCaseLabel, setEditingUseCaseLabel] = useState("");
+  const [editingActorId, setEditingActorId] = useState<string | null>(null);
+  const [editingActorLabel, setEditingActorLabel] = useState("");
+  const [editingRelationshipIndex, setEditingRelationshipIndex] = useState<number | null>(null);
+  const [editingRelationshipFrom, setEditingRelationshipFrom] = useState("");
+  const [editingRelationshipTo, setEditingRelationshipTo] = useState("");
+  const [editingRelationshipType, setEditingRelationshipType] = useState<RelationshipType>("association");
+  const [editingRelationshipLabel, setEditingRelationshipLabel] = useState("");
   const diagramWrapRef = useRef<HTMLDivElement | null>(null);
 
   const applyChange = (updater: (current: DiagramState) => DiagramState) => {
@@ -225,13 +245,18 @@ const UseCaseUMLBuilder = () => {
   const groupedModules = groups.length > 1 ? groups : undefined;
 
   const relationEdges: Relationship[] = relationships
-    .filter((r) => r.from && r.to)
-    .map((r) => ({
-      from: r.from,
-      to: r.to,
-      type: r.type,
-      label: r.label.trim() || undefined,
-    }));
+    .map((r, sourceIndex) =>
+      r.from && r.to
+        ? {
+            from: r.from,
+            to: r.to,
+            type: r.type,
+            label: r.label.trim() || undefined,
+            sourceIndex,
+          }
+        : null,
+    )
+    .filter(Boolean) as Relationship[];
 
   const statsText = useMemo(
     () => `${actorOptions.length} actor(s) • ${useCaseOptions.length} use case(s) • ${relationEdges.length} relation(s)`,
@@ -261,6 +286,125 @@ const UseCaseUMLBuilder = () => {
 
     return JSON.stringify(payload, null, 2);
   }, [present]);
+
+  const handleUseCaseEditFromDiagram = (useCaseId: string) => {
+    const existing = useCases.find((u) => u.id === useCaseId);
+    if (!existing) return;
+    setEditingUseCaseId(existing.id);
+    setEditingUseCaseLabel(existing.label);
+  };
+
+  const closeUseCaseEditDialog = () => {
+    setEditingUseCaseId(null);
+    setEditingUseCaseLabel("");
+  };
+
+  const handleActorEditFromDiagram = (actorId: string) => {
+    const existing = actors.find((a) => a.id === actorId);
+    if (!existing) return;
+    setEditingActorId(existing.id);
+    setEditingActorLabel(existing.label);
+  };
+
+  const closeActorEditDialog = () => {
+    setEditingActorId(null);
+    setEditingActorLabel("");
+  };
+
+  const handleRelationshipEditFromDiagram = (sourceIndex: number) => {
+    const existing = relationships[sourceIndex];
+    if (!existing) return;
+    setEditingRelationshipIndex(sourceIndex);
+    setEditingRelationshipFrom(existing.from);
+    setEditingRelationshipTo(existing.to);
+    setEditingRelationshipType(existing.type);
+    setEditingRelationshipLabel(existing.label);
+  };
+
+  const closeRelationshipEditDialog = () => {
+    setEditingRelationshipIndex(null);
+    setEditingRelationshipFrom("");
+    setEditingRelationshipTo("");
+    setEditingRelationshipType("association");
+    setEditingRelationshipLabel("");
+  };
+
+  const saveRelationshipEditFromDialog = () => {
+    if (editingRelationshipIndex === null) return;
+    if (!editingRelationshipFrom || !editingRelationshipTo) return;
+
+    applyChange((state) => {
+      const existing = state.relationships[editingRelationshipIndex];
+      if (!existing) return state;
+      const nextRelationships = [...state.relationships];
+      nextRelationships[editingRelationshipIndex] = {
+        from: editingRelationshipFrom,
+        to: editingRelationshipTo,
+        type: editingRelationshipType,
+        label: editingRelationshipLabel,
+      };
+      return { ...state, relationships: nextRelationships };
+    });
+    closeRelationshipEditDialog();
+  };
+
+  const saveActorEditFromDialog = () => {
+    if (!editingActorId) return;
+    const trimmedLabel = editingActorLabel.trim();
+    if (!trimmedLabel) return;
+
+    applyChange((state) => {
+      const target = state.actors.find((a) => a.id === editingActorId);
+      if (!target) return state;
+      if (trimmedLabel === target.label) return state;
+
+      const usedIds = new Set(state.actors.filter((a) => a.id !== editingActorId).map((a) => a.id));
+      const nextId = getUniqueId(slugify(trimmedLabel), usedIds);
+
+      const nextActors = state.actors.map((a) => (a.id === editingActorId ? { ...a, label: trimmedLabel, id: nextId } : a));
+      const nextRelationships =
+        nextId === editingActorId
+          ? state.relationships
+          : state.relationships.map((r) => ({
+              ...r,
+              from: r.from === editingActorId ? nextId : r.from,
+              to: r.to === editingActorId ? nextId : r.to,
+            }));
+
+      return { ...state, actors: nextActors, relationships: nextRelationships };
+    });
+    closeActorEditDialog();
+  };
+
+  const saveUseCaseEditFromDialog = () => {
+    if (!editingUseCaseId) return;
+    const trimmedLabel = editingUseCaseLabel.trim();
+    if (!trimmedLabel) return;
+
+    applyChange((state) => {
+      const target = state.useCases.find((u) => u.id === editingUseCaseId);
+      if (!target) return state;
+      if (trimmedLabel === target.label) return state;
+
+      const usedIds = new Set(state.useCases.filter((u) => u.id !== editingUseCaseId).map((u) => u.id));
+      const nextId = getUniqueId(slugify(trimmedLabel), usedIds);
+
+      const nextUseCases = state.useCases.map((u) =>
+        u.id === editingUseCaseId ? { ...u, label: trimmedLabel, id: nextId } : u,
+      );
+      const nextRelationships =
+        nextId === editingUseCaseId
+          ? state.relationships
+          : state.relationships.map((r) => ({
+              ...r,
+              from: r.from === editingUseCaseId ? nextId : r.from,
+              to: r.to === editingUseCaseId ? nextId : r.to,
+            }));
+
+      return { ...state, useCases: nextUseCases, relationships: nextRelationships };
+    });
+    closeUseCaseEditDialog();
+  };
 
   const downloadFile = (content: string, filename: string, type: string) => {
     const blob = new Blob([content], { type });
@@ -714,10 +858,154 @@ const UseCaseUMLBuilder = () => {
               useCases={useCaseNodes}
               relationships={relationEdges}
               groups={groupedModules}
+              onUseCaseEdit={handleUseCaseEditFromDiagram}
+              onActorEdit={handleActorEditFromDiagram}
+              onRelationshipEdit={handleRelationshipEditFromDiagram}
             />
           </div>
         </section>
       </div>
+      {editingRelationshipIndex !== null ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit relationship"
+          onClick={closeRelationshipEditDialog}
+        >
+          <div
+            className="w-full max-w-xl rounded-2xl border border-sky-200 bg-white p-4 shadow-xl sm:p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-semibold text-foreground">Edit Relationship</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Update connection fields from the diagram.</p>
+            <form
+              className="mt-3 grid gap-2 sm:grid-cols-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveRelationshipEditFromDialog();
+              }}
+            >
+              <select value={editingRelationshipFrom} onChange={(e) => setEditingRelationshipFrom(e.target.value)} className={inputCls}>
+                <option value="">Who/What starts?</option>
+                {allNodeOptions.map((n) => (
+                  <option key={`dialog-from-${n.id}`} value={n.id}>
+                    {n.label}
+                  </option>
+                ))}
+              </select>
+              <select value={editingRelationshipType} onChange={(e) => setEditingRelationshipType(e.target.value as RelationshipType)} className={inputCls}>
+                <option value="association">association</option>
+                <option value="include">include</option>
+                <option value="extend">extend</option>
+                <option value="generalization">generalization</option>
+              </select>
+              <select value={editingRelationshipTo} onChange={(e) => setEditingRelationshipTo(e.target.value)} className={inputCls}>
+                <option value="">Connects to?</option>
+                {allNodeOptions.map((n) => (
+                  <option key={`dialog-to-${n.id}`} value={n.id}>
+                    {n.label}
+                  </option>
+                ))}
+              </select>
+              <input
+                value={editingRelationshipLabel}
+                onChange={(e) => setEditingRelationshipLabel(e.target.value)}
+                className={inputCls}
+                placeholder="Optional note"
+              />
+              <div className="flex justify-end gap-2 sm:col-span-2">
+                <button type="button" className={btnCls} onClick={closeRelationshipEditDialog}>
+                  Cancel
+                </button>
+                <button type="submit" className={btnCls} disabled={!editingRelationshipFrom || !editingRelationshipTo}>
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+      {editingActorId ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit actor"
+          onClick={closeActorEditDialog}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-sky-200 bg-white p-4 shadow-xl sm:p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-semibold text-foreground">Edit Actor</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Update the actor name from the diagram.</p>
+            <form
+              className="mt-3 space-y-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveActorEditFromDialog();
+              }}
+            >
+              <input
+                value={editingActorLabel}
+                onChange={(e) => setEditingActorLabel(e.target.value)}
+                className={`${inputCls} w-full`}
+                autoFocus
+                placeholder="Actor label"
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" className={btnCls} onClick={closeActorEditDialog}>
+                  Cancel
+                </button>
+                <button type="submit" className={btnCls} disabled={!editingActorLabel.trim()}>
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+      {editingUseCaseId ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit use case"
+          onClick={closeUseCaseEditDialog}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-sky-200 bg-white p-4 shadow-xl sm:p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-semibold text-foreground">Edit Use Case</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Update the use case name from the diagram.</p>
+            <form
+              className="mt-3 space-y-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveUseCaseEditFromDialog();
+              }}
+            >
+              <input
+                value={editingUseCaseLabel}
+                onChange={(e) => setEditingUseCaseLabel(e.target.value)}
+                className={`${inputCls} w-full`}
+                autoFocus
+                placeholder="Use case label"
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" className={btnCls} onClick={closeUseCaseEditDialog}>
+                  Cancel
+                </button>
+                <button type="submit" className={btnCls} disabled={!editingUseCaseLabel.trim()}>
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 };

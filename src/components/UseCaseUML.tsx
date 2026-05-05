@@ -18,6 +18,7 @@ type Relationship = {
   to: string;
   type?: RelationshipType;
   label?: string;
+  sourceIndex?: number;
 };
 
 type UseCaseGroup = {
@@ -39,6 +40,9 @@ type UseCaseUMLProps = {
   actorHeight?: number;
   useCaseWidth?: number;
   useCaseHeight?: number;
+  onUseCaseEdit?: (useCaseId: string) => void;
+  onActorEdit?: (actorId: string) => void;
+  onRelationshipEdit?: (sourceIndex: number) => void;
 };
 
 type Point = { x: number; y: number };
@@ -121,6 +125,9 @@ const UseCaseUML = ({
   actorHeight = 120,
   useCaseWidth = 220,
   useCaseHeight = 56,
+  onUseCaseEdit,
+  onActorEdit,
+  onRelationshipEdit,
 }: UseCaseUMLProps) => {
   const { nodes, relationElements, systemBox, height, groupLayouts, svgWidth } = useMemo(() => {
     const leftActors = actors.filter((a) => (a.side ?? "left") === "left");
@@ -260,9 +267,14 @@ const UseCaseUML = ({
         const labelX = midX + normal.x * (idx % 2 === 0 ? 16 : -16);
         const labelY = midY + normal.y * (idx % 2 === 0 ? 16 : -16);
         const labelText = rel.label || (type === "include" || type === "extend" ? `<<${type}>>` : "");
+        const sourceIndex = rel.sourceIndex ?? idx;
 
         return (
-          <g key={`${rel.from}-${rel.to}-${idx}`}>
+          <g
+            key={`${rel.from}-${rel.to}-${idx}`}
+            onClick={() => onRelationshipEdit?.(sourceIndex)}
+            className={onRelationshipEdit ? "cursor-pointer" : undefined}
+          >
             <path
               d={createLinePath(start, end)}
               fill="none"
@@ -307,7 +319,7 @@ const UseCaseUML = ({
       svgWidth: neededWidth,
       height: systemY + systemHeight + MARGIN,
     };
-  }, [actors, relationships, groups, useCases, width, actorHeight, actorWidth, useCaseHeight, useCaseWidth]);
+  }, [actors, relationships, groups, useCases, width, actorHeight, actorWidth, useCaseHeight, useCaseWidth, onRelationshipEdit]);
 
   return (
     <div className="w-full overflow-x-auto rounded-md border border-border bg-card p-3 text-foreground">
@@ -350,7 +362,11 @@ const UseCaseUML = ({
         {nodes.map((node) => {
           if (node.kind === "usecase") {
             return (
-              <g key={node.id}>
+              <g
+                key={node.id}
+                onClick={() => onUseCaseEdit?.(node.id)}
+                className={onUseCaseEdit ? "cursor-pointer" : undefined}
+              >
                 <ellipse
                   cx={node.x + node.width / 2}
                   cy={node.y + node.height / 2}
@@ -375,7 +391,11 @@ const UseCaseUML = ({
           const legY = node.y + 94;
 
           return (
-            <g key={node.id}>
+            <g
+              key={node.id}
+              onClick={() => onActorEdit?.(node.id)}
+              className={onActorEdit ? "cursor-pointer" : undefined}
+            >
               <circle cx={centerX} cy={headY} r={10} fill="none" stroke="currentColor" strokeWidth={1.2} />
               <line x1={centerX} y1={bodyY1} x2={centerX} y2={bodyY2} stroke="currentColor" strokeWidth={1.2} />
               <line x1={centerX - 20} y1={armY} x2={centerX + 20} y2={armY} stroke="currentColor" strokeWidth={1.2} />
