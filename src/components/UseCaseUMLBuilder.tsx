@@ -81,7 +81,6 @@ const UseCaseUMLBuilder = () => {
   const [future, setFuture] = useState<DiagramState[]>([]);
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState("");
-  const [isEditingJson, setIsEditingJson] = useState(false);
   const diagramWrapRef = useRef<HTMLDivElement | null>(null);
 
   const applyChange = (updater: (current: DiagramState) => DiagramState) => {
@@ -331,10 +330,8 @@ const UseCaseUMLBuilder = () => {
   };
 
   useEffect(() => {
-    if (!isEditingJson) {
-      setImportText(exportJsonText);
-    }
-  }, [exportJsonText, isEditingJson]);
+    setImportText(exportJsonText);
+  }, [exportJsonText]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -659,11 +656,6 @@ const UseCaseUMLBuilder = () => {
             </div>
             <textarea
               value={importText}
-              onFocus={() => setIsEditingJson(true)}
-              onBlur={() => {
-                setIsEditingJson(false);
-                setImportText(exportJsonText);
-              }}
               onChange={(e) => {
                 const nextText = e.target.value;
                 setImportText(nextText);
