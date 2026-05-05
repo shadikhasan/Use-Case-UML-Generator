@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import UseCaseUML, {
   type Actor,
@@ -79,6 +78,9 @@ const inputCls =
   "rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
 const btnCls =
   "rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-45";
+
+const EXPORT_WIDTH = 1600;
+const EXPORT_HEIGHT = 1000;
 
 const UseCaseUMLBuilder = () => {
   const initialState: DiagramState = {
@@ -427,13 +429,47 @@ const UseCaseUMLBuilder = () => {
     downloadFile(serialized, "use-case-diagram.svg", "image/svg+xml;charset=utf-8");
   };
 
+  const renderFixedExportPng = async () => {
+    const svg = diagramWrapRef.current?.querySelector("svg");
+    if (!svg) return null;
+
+    const serialized = new XMLSerializer().serializeToString(svg);
+    const svgBlob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
+    const svgUrl = URL.createObjectURL(svgBlob);
+
+    try {
+      const svgImage = new Image();
+      svgImage.src = svgUrl;
+      await new Promise<void>((resolve, reject) => {
+        svgImage.onload = () => resolve();
+        svgImage.onerror = () => reject(new Error("Failed to render diagram SVG for export."));
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = EXPORT_WIDTH;
+      canvas.height = EXPORT_HEIGHT;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
+
+      const ratio = Math.min(EXPORT_WIDTH / svgImage.width, EXPORT_HEIGHT / svgImage.height);
+      const renderWidth = svgImage.width * ratio;
+      const renderHeight = svgImage.height * ratio;
+      const offsetX = (EXPORT_WIDTH - renderWidth) / 2;
+      const offsetY = (EXPORT_HEIGHT - renderHeight) / 2;
+      ctx.drawImage(svgImage, offsetX, offsetY, renderWidth, renderHeight);
+
+      return canvas.toDataURL("image/png");
+    } finally {
+      URL.revokeObjectURL(svgUrl);
+    }
+  };
+
   const handleExportPNG = async () => {
-    if (!diagramWrapRef.current) return;
-    const dataUrl = await toPng(diagramWrapRef.current, {
-      cacheBust: true,
-      pixelRatio: 2,
-      backgroundColor: "#ffffff",
-    });
+    const dataUrl = await renderFixedExportPng();
+    if (!dataUrl) return;
     const a = document.createElement("a");
     a.href = dataUrl;
     a.download = "use-case-diagram.png";
@@ -441,12 +477,8 @@ const UseCaseUMLBuilder = () => {
   };
 
   const handleExportPDF = async () => {
-    if (!diagramWrapRef.current) return;
-    const dataUrl = await toPng(diagramWrapRef.current, {
-      cacheBust: true,
-      pixelRatio: 2,
-      backgroundColor: "#ffffff",
-    });
+    const dataUrl = await renderFixedExportPng();
+    if (!dataUrl) return;
 
     const img = new Image();
     img.src = dataUrl;
