@@ -399,18 +399,6 @@ const UseCaseUMLBuilder = () => {
             <button type="button" className={btnCls} onClick={redo} disabled={future.length === 0}>
               Redo
             </button>
-            <button type="button" className={btnCls} onClick={handleExportPNG}>
-              Export PNG
-            </button>
-            <button type="button" className={btnCls} onClick={handleExportPDF}>
-              Export PDF
-            </button>
-            <button type="button" className={btnCls} onClick={handleExportSVG}>
-              Export SVG
-            </button>
-            <button type="button" className={btnCls} onClick={handleExportJSON}>
-              Export JSON
-            </button>
           </div>
         </header>
 
