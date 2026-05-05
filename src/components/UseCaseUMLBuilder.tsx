@@ -66,7 +66,7 @@ const cardCls = "space-y-3 rounded-lg border border-border bg-card p-4";
 const inputCls = "rounded-md border border-input bg-background px-3 py-2 text-sm";
 const btnCls = "rounded-md border border-input px-3 py-1.5 text-xs font-medium hover:bg-muted";
 
-const UseCaseUMLDemo = () => {
+const UseCaseUMLBuilder = () => {
   const initialState: DiagramState = {
     systemName: "Online Shop",
     actors: initialActors,
@@ -694,4 +694,4 @@ const UseCaseUMLDemo = () => {
   );
 };
 
-export default UseCaseUMLDemo;
+export default UseCaseUMLBuilder;

@@ -1,5 +1,5 @@
-import UseCaseUMLDemo from "@/components/UseCaseUMLDemo";
+import UseCaseUMLBuilder from "@/components/UseCaseUMLBuilder";
 
 export default function Page() {
-  return <UseCaseUMLDemo />;
+  return <UseCaseUMLBuilder />;
 }
