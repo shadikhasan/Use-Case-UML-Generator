@@ -335,6 +335,13 @@ const UseCaseUMLBuilder = () => {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTypingTarget =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target?.isContentEditable;
+      if (isTypingTarget) return;
+
       const key = event.key.toLowerCase();
       const isMetaOrCtrl = event.ctrlKey || event.metaKey;
 
