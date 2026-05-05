@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
@@ -62,9 +63,11 @@ const initialRelationships: EditableRelationship[] = [
   { from: "place-order", to: "browse-products", type: "include", label: "" },
 ];
 
-const cardCls = "space-y-3 rounded-lg border border-border bg-card p-4";
-const inputCls = "rounded-md border border-input bg-background px-3 py-2 text-sm";
-const btnCls = "rounded-md border border-input px-3 py-1.5 text-xs font-medium hover:bg-muted";
+const cardCls = "space-y-3 rounded-2xl border border-sky-200/80 bg-white/90 p-4 shadow-sm backdrop-blur";
+const inputCls =
+  "rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm text-foreground outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+const btnCls =
+  "rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-45";
 
 const UseCaseUMLBuilder = () => {
   const initialState: DiagramState = {
@@ -78,7 +81,7 @@ const UseCaseUMLBuilder = () => {
   const [future, setFuture] = useState<DiagramState[]>([]);
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState("");
-  const [jsonDirty, setJsonDirty] = useState(false);
+  const [isEditingJson, setIsEditingJson] = useState(false);
   const diagramWrapRef = useRef<HTMLDivElement | null>(null);
 
   const applyChange = (updater: (current: DiagramState) => DiagramState) => {
@@ -328,18 +331,10 @@ const UseCaseUMLBuilder = () => {
   };
 
   useEffect(() => {
-    if (!jsonDirty) {
+    if (!isEditingJson) {
       setImportText(exportJsonText);
     }
-  }, [exportJsonText, jsonDirty]);
-
-  useEffect(() => {
-    if (!jsonDirty) return;
-    const timer = window.setTimeout(() => {
-      importFromJsonString(importText);
-    }, 220);
-    return () => window.clearTimeout(timer);
-  }, [importText, jsonDirty]);
+  }, [exportJsonText, isEditingJson]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -369,13 +364,35 @@ const UseCaseUMLBuilder = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background px-4 py-8 md:px-8">
-      <div className="mx-auto max-w-6xl space-y-5">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Use Case UML Builder</h1>
-          <p className="text-sm text-muted-foreground">Fill left form or edit JSON on right. Both stay synced.</p>
-          <p className="mt-1 text-xs text-muted-foreground">{statsText}</p>
-          <div className="mt-3 flex gap-2">
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-cyan-50 via-sky-50 to-amber-50 px-3 py-6 sm:px-4 sm:py-8 md:px-8 md:py-10">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute left-[-10rem] top-[-9rem] h-80 w-80 rounded-full bg-cyan-300/65 blur-3xl" />
+        <div className="absolute right-[-12rem] top-16 h-96 w-96 rounded-full bg-fuchsia-300/40 blur-3xl" />
+        <div className="absolute bottom-[-8rem] left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-amber-300/55 blur-3xl" />
+      </div>
+
+      <div className="mx-auto max-w-6xl space-y-4 sm:space-y-5">
+        <header className="rounded-3xl border border-sky-200/80 bg-white/85 p-4 shadow-sm backdrop-blur sm:p-6 md:p-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-2">
+              <p className="inline-flex rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold tracking-wide text-sky-700">
+                UML MODELING WORKSPACE
+              </p>
+              <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl md:text-3xl">Use Case UML Builder</h1>
+              <p className="text-sm text-muted-foreground">
+                Structured builder for actors, use cases, relations, and export-ready diagram output.
+              </p>
+              <p className="text-xs font-medium text-sky-700">{statsText}</p>
+            </div>
+            <Link
+              href="/"
+              className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100"
+            >
+              Back to landing page
+            </Link>
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:flex sm:flex-wrap">
             <button type="button" className={btnCls} onClick={undo} disabled={past.length === 0}>
               Undo
             </button>
@@ -395,13 +412,13 @@ const UseCaseUMLBuilder = () => {
               Export JSON
             </button>
           </div>
-        </div>
+        </header>
 
         <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
           <div className="space-y-4">
-            <section className={`${cardCls} py-2`}>
-              <div className="flex items-center gap-3">
-                <h2 className="shrink-0 text-sm font-semibold">System</h2>
+            <section className={`${cardCls} py-3`}>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <h2 className="shrink-0 text-sm font-semibold sm:w-16">System</h2>
                 <input
                   value={systemName}
                   onChange={(e) => applyChange((state) => ({ ...state, systemName: e.target.value }))}
@@ -428,7 +445,7 @@ const UseCaseUMLBuilder = () => {
               </button>
             </div>
             {actors.map((actor, idx) => (
-              <div key={actor.id} className="grid gap-2 md:grid-cols-12">
+              <div key={actor.id} className="grid gap-2 sm:grid-cols-2 md:grid-cols-12">
                 <input
                   value={actor.label}
                   onChange={(e) => {
@@ -440,7 +457,7 @@ const UseCaseUMLBuilder = () => {
                     });
                   }}
                   placeholder="Name (e.g., Student, Admin)"
-                  className={`${inputCls} md:col-span-7`}
+                  className={`${inputCls} sm:col-span-2 md:col-span-7`}
                 />
                 <select
                   value={actor.side}
@@ -459,7 +476,7 @@ const UseCaseUMLBuilder = () => {
                 </select>
                 <button
                   type="button"
-                  className="rounded-md border border-destructive px-3 py-2 text-xs text-destructive hover:bg-destructive/10 md:col-span-2"
+                  className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 sm:col-span-2 md:col-span-2"
                   onClick={() => applyChange((state) => ({ ...state, actors: state.actors.filter((_, i) => i !== idx) }))}
                 >
                   Remove
@@ -485,7 +502,7 @@ const UseCaseUMLBuilder = () => {
               </button>
             </div>
             {useCases.map((item, idx) => (
-              <div key={item.id} className="grid gap-2 md:grid-cols-12">
+              <div key={item.id} className="grid gap-2 sm:grid-cols-2 md:grid-cols-12">
                 <input
                   value={item.label}
                   onChange={(e) => {
@@ -497,7 +514,7 @@ const UseCaseUMLBuilder = () => {
                     });
                   }}
                   placeholder="Action (e.g., Register for Reunion)"
-                  className={`${inputCls} md:col-span-7`}
+                  className={`${inputCls} sm:col-span-2 md:col-span-7`}
                 />
                 <input
                   value={item.module}
@@ -514,7 +531,7 @@ const UseCaseUMLBuilder = () => {
                 />
                 <button
                   type="button"
-                  className="rounded-md border border-destructive px-3 py-2 text-xs text-destructive hover:bg-destructive/10 md:col-span-2"
+                  className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 sm:col-span-2 md:col-span-2"
                   onClick={() => applyChange((state) => ({ ...state, useCases: state.useCases.filter((_, i) => i !== idx) }))}
                 >
                   Remove
@@ -549,7 +566,7 @@ const UseCaseUMLBuilder = () => {
             </div>
             <p className="text-xs text-muted-foreground">Use `include` and `extend` for dashed UML relations.</p>
             {relationships.map((rel, idx) => (
-              <div key={`${rel.from}-${rel.to}-${idx}`} className="grid gap-2 md:grid-cols-12">
+              <div key={`${rel.from}-${rel.to}-${idx}`} className="grid gap-2 sm:grid-cols-2 md:grid-cols-12">
                 <select
                   value={rel.from}
                   onChange={(e) => {
@@ -560,7 +577,7 @@ const UseCaseUMLBuilder = () => {
                       return { ...state, relationships: next };
                     });
                   }}
-                  className={`${inputCls} md:col-span-3`}
+                  className={`${inputCls} sm:col-span-2 md:col-span-3`}
                 >
                   <option value="">Who/What starts?</option>
                   {allNodeOptions.map((n) => (
@@ -596,7 +613,7 @@ const UseCaseUMLBuilder = () => {
                       return { ...state, relationships: next };
                     });
                   }}
-                  className={`${inputCls} md:col-span-3`}
+                  className={`${inputCls} sm:col-span-2 md:col-span-3`}
                 >
                   <option value="">Connects to?</option>
                   {allNodeOptions.map((n) => (
@@ -616,11 +633,11 @@ const UseCaseUMLBuilder = () => {
                     });
                   }}
                   placeholder="Optional note"
-                  className={`${inputCls} md:col-span-3`}
+                  className={`${inputCls} sm:col-span-2 md:col-span-3`}
                 />
                 <button
                   type="button"
-                  className="rounded-md border border-destructive px-3 py-2 text-xs text-destructive hover:bg-destructive/10 md:col-span-1"
+                  className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 sm:col-span-2 md:col-span-1"
                   onClick={() =>
                     applyChange((state) => ({ ...state, relationships: state.relationships.filter((_, i) => i !== idx) }))
                   }
@@ -632,7 +649,7 @@ const UseCaseUMLBuilder = () => {
             </section>
           </div>
 
-          <section className={cardCls}>
+          <section className={`${cardCls} lg:sticky lg:top-4`}>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-semibold">JSON</h2>
               <label className={btnCls}>
@@ -647,7 +664,6 @@ const UseCaseUMLBuilder = () => {
                     const text = await file.text();
                     setImportText(text);
                     importFromJsonString(text);
-                    setJsonDirty(false);
                     e.currentTarget.value = "";
                   }}
                 />
@@ -655,12 +671,18 @@ const UseCaseUMLBuilder = () => {
             </div>
             <textarea
               value={importText}
+              onFocus={() => setIsEditingJson(true)}
+              onBlur={() => {
+                setIsEditingJson(false);
+                setImportText(exportJsonText);
+              }}
               onChange={(e) => {
-                setImportText(e.target.value);
-                setJsonDirty(true);
+                const nextText = e.target.value;
+                setImportText(nextText);
+                importFromJsonString(nextText);
               }}
               placeholder='Paste JSON here. Example: {"systemName":"Reunion Hub","actors":[],"useCases":[],"relationships":[]}'
-              className={`${inputCls} min-h-[560px] w-full font-mono text-xs`}
+              className={`${inputCls} min-h-[280px] w-full font-mono text-xs sm:min-h-[360px] md:min-h-[460px] lg:min-h-[560px]`}
               spellCheck={false}
             />
             <div className="flex items-center gap-2">
@@ -670,7 +692,6 @@ const UseCaseUMLBuilder = () => {
                 onClick={() => {
                   setImportText(exportJsonText);
                   setImportError("");
-                  setJsonDirty(false);
                 }}
               >
                 Reset JSON
@@ -680,17 +701,37 @@ const UseCaseUMLBuilder = () => {
           </section>
         </div>
 
-        <div ref={diagramWrapRef}>
-          <UseCaseUML
-            systemName={systemName || "System"}
-            actors={actorNodes}
-            useCases={useCaseNodes}
-            relationships={relationEdges}
-            groups={groupedModules}
-          />
-        </div>
+        <section className="space-y-3 rounded-3xl border border-indigo-200/70 bg-white/90 p-3 shadow-sm sm:p-4 md:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-foreground">Live Diagram Preview</h2>
+            <p className="text-xs text-muted-foreground">Updates in real time from form or JSON editor</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+            <button type="button" className={btnCls} onClick={handleExportPNG}>
+              Export PNG
+            </button>
+            <button type="button" className={btnCls} onClick={handleExportPDF}>
+              Export PDF
+            </button>
+            <button type="button" className={btnCls} onClick={handleExportSVG}>
+              Export SVG
+            </button>
+            <button type="button" className={btnCls} onClick={handleExportJSON}>
+              Export JSON
+            </button>
+          </div>
+          <div ref={diagramWrapRef}>
+            <UseCaseUML
+              systemName={systemName || "System"}
+              actors={actorNodes}
+              useCases={useCaseNodes}
+              relationships={relationEdges}
+              groups={groupedModules}
+            />
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 };
 
