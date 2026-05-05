@@ -79,9 +79,6 @@ const inputCls =
 const btnCls =
   "rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-45";
 
-const EXPORT_WIDTH = 1600;
-const EXPORT_HEIGHT = 1000;
-
 const UseCaseUMLBuilder = () => {
   const initialState: DiagramState = {
     systemName: "Online Shop",
@@ -429,9 +426,26 @@ const UseCaseUMLBuilder = () => {
     downloadFile(serialized, "use-case-diagram.svg", "image/svg+xml;charset=utf-8");
   };
 
-  const renderFixedExportPng = async () => {
+  const renderExportPng = async (targetScale = 2) => {
     const svg = diagramWrapRef.current?.querySelector("svg");
     if (!svg) return null;
+
+    const viewBox = svg.viewBox?.baseVal;
+    const exportWidth =
+      viewBox && viewBox.width > 0 ? Math.round(viewBox.width) : Math.round(svg.width?.baseVal?.value || svg.getBoundingClientRect().width);
+    const exportHeight =
+      viewBox && viewBox.height > 0
+        ? Math.round(viewBox.height)
+        : Math.round(svg.height?.baseVal?.value || svg.getBoundingClientRect().height);
+    if (exportWidth <= 0 || exportHeight <= 0) return null;
+    const MAX_CANVAS_SIDE = 16384;
+    const MAX_CANVAS_PIXELS = 80_000_000;
+    const safeScale = Math.max(1, targetScale);
+    const sideScaleLimit = Math.min(MAX_CANVAS_SIDE / exportWidth, MAX_CANVAS_SIDE / exportHeight);
+    const areaScaleLimit = Math.sqrt(MAX_CANVAS_PIXELS / (exportWidth * exportHeight));
+    const renderScale = Math.max(1, Math.min(safeScale, sideScaleLimit, areaScaleLimit));
+    const canvasWidth = Math.max(1, Math.floor(exportWidth * renderScale));
+    const canvasHeight = Math.max(1, Math.floor(exportHeight * renderScale));
 
     const serialized = new XMLSerializer().serializeToString(svg);
     const svgBlob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
@@ -446,20 +460,16 @@ const UseCaseUMLBuilder = () => {
       });
 
       const canvas = document.createElement("canvas");
-      canvas.width = EXPORT_WIDTH;
-      canvas.height = EXPORT_HEIGHT;
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;
 
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, EXPORT_WIDTH, EXPORT_HEIGHT);
-
-      const ratio = Math.min(EXPORT_WIDTH / svgImage.width, EXPORT_HEIGHT / svgImage.height);
-      const renderWidth = svgImage.width * ratio;
-      const renderHeight = svgImage.height * ratio;
-      const offsetX = (EXPORT_WIDTH - renderWidth) / 2;
-      const offsetY = (EXPORT_HEIGHT - renderHeight) / 2;
-      ctx.drawImage(svgImage, offsetX, offsetY, renderWidth, renderHeight);
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(svgImage, 0, 0, canvasWidth, canvasHeight);
 
       return canvas.toDataURL("image/png");
     } finally {
@@ -468,7 +478,7 @@ const UseCaseUMLBuilder = () => {
   };
 
   const handleExportPNG = async () => {
-    const dataUrl = await renderFixedExportPng();
+    const dataUrl = await renderExportPng(2);
     if (!dataUrl) return;
     const a = document.createElement("a");
     a.href = dataUrl;
@@ -477,7 +487,7 @@ const UseCaseUMLBuilder = () => {
   };
 
   const handleExportPDF = async () => {
-    const dataUrl = await renderFixedExportPng();
+    const dataUrl = await renderExportPng(2);
     if (!dataUrl) return;
 
     const img = new Image();
